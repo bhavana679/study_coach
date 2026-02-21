@@ -39,3 +39,20 @@ def scale_features(X_train, X_test):
     X_test_scaled = scaler.transform(X_test)
 
     return X_train_scaled, X_test_scaled, scaler
+
+def preprocess_pipeline(path, target="G3", task="regression", test_size=0.2):
+    df = load_data(path)
+
+    if task == "classification":
+        df = create_risk_label(df)
+        target = "risk_level"
+
+    X, y = clean_and_encode(df, target=target, task=task)
+
+    X_train, X_test, y_train, y_test = train_test_split(
+        X, y, test_size=test_size, random_state=42
+    )
+
+    X_train_scaled, X_test_scaled, scaler = scale_features(X_train, X_test)
+
+    return X_train_scaled, X_test_scaled, y_train, y_test, scaler
