@@ -67,6 +67,26 @@ study_coach/
    python src/train.py
    ```
 
+### Running the backend API locally
+
+After installing dependencies you can run the Flask API included in `src/api.py`:
+
+```bash
+# From the repository root
+python src/api.py
+```
+
+The API will start on `http://localhost:5000` by default and provides the following endpoints:
+- `GET /` - API info / health
+- `POST /predict` - Accepts a student JSON and returns `predicted_grade`, `risk_level`, and `recommendations`
+- `GET /health` - Health status
+
+To connect the frontend to this backend, create `frontend/.env.local` and set:
+
+```
+BACKEND_URL=http://localhost:5000
+```
+
 ### Frontend Setup
 
 1. **Navigate to frontend directory**:

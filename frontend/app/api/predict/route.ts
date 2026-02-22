@@ -15,7 +15,17 @@ export async function POST(request: Request) {
         });
 
         const json = await res.json();
-        return NextResponse.json(json, { status: res.status });
+
+        // Normalize backend keys to camelCase expected by frontend
+        const normalized = {
+          predictedGrade: json.predicted_grade ?? json.predictedGrade ?? json.predicted_score ?? json.predicted_score ?? null,
+          riskLevel: json.risk_level ?? json.riskLevel ?? null,
+          confidence: json.confidence ?? json.confidence_score ?? json.confidence_score ?? null,
+          recommendations: json.recommendations ?? json.recs ?? json.recommendations ?? [],
+          status: json.status ?? (res.ok ? 'success' : 'error')
+        };
+
+        return NextResponse.json(normalized, { status: res.status });
       } catch (err) {
         // Fall through to mock on error
         console.error("Error calling backend predict API:", err);
