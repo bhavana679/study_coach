@@ -18,8 +18,16 @@ Thumbs.db
 models/*.pkl
 
 # Data files (if large)
-data/raw/
 data/processed/
 
 # Streamlit cache
-.streamlit/ 
+.streamlit/
+
+# Frontend / Next.js
+frontend/node_modules/
+frontend/.next/
+frontend/out/
+frontend/.env*.local
+frontend/.vercel
+ 
+
