@@ -136,19 +136,66 @@ def predict():
 
 def preprocess_input(df):
     """
-    Preprocess input data to match training format
-    This should align with preprocessing.py
+    Preprocess input data to match training format exactly.
+    Ensures all 40 dummy columns are present in the correct order.
     """
-    # Apply the same transformations as in training
-    # For now, dummy encode categorical variables
-    categorical_cols = ['school', 'sex', 'address', 'famsize', 'Pstatus',
-                       'Mjob', 'Fjob', 'reason', 'guardian', 'schoolsup',
-                       'famsup', 'paid', 'activities', 'nursery', 'higher',
-                       'internet', 'romantic', 'subject']
+    # 1. Define all feature columns the model expects (in order)
+    expected_features = [
+        'age', 'Medu', 'Fedu', 'traveltime', 'studytime', 'failures', 'famrel', 
+        'freetime', 'goout', 'Dalc', 'Walc', 'health', 'absences', 
+        'school_MS', 'sex_M', 'address_U', 'famsize_LE3', 'Pstatus_T', 
+        'Mjob_health', 'Mjob_other', 'Mjob_services', 'Mjob_teacher', 
+        'Fjob_health', 'Fjob_other', 'Fjob_services', 'Fjob_teacher', 
+        'reason_home', 'reason_other', 'reason_reputation', 
+        'guardian_mother', 'guardian_other', 'schoolsup_yes', 'famsup_yes', 
+        'paid_yes', 'activities_yes', 'nursery_yes', 'higher_yes', 
+        'internet_yes', 'romantic_yes', 'subject_portuguese'
+    ]
     
-    df_encoded = pd.get_dummies(df, columns=categorical_cols, drop_first=True)
+    # 2. Categorical columns for get_dummies and their defaults
+    categorical_defaults = {
+        'school': 'GP', 'sex': 'F', 'address': 'U', 'famsize': 'GT3', 'Pstatus': 'T',
+        'Mjob': 'other', 'Fjob': 'other', 'reason': 'course', 'guardian': 'mother',
+        'schoolsup': 'no', 'famsup': 'no', 'paid': 'no', 'activities': 'no',
+        'nursery': 'yes', 'higher': 'yes', 'internet': 'yes', 'romantic': 'no',
+        'subject': 'math'
+    }
     
-    return df_encoded
+    # Fill missing categorical columns
+    for col, default in categorical_defaults.items():
+        if col not in df.columns:
+            df[col] = default
+            
+    # 3. Create dummies
+    df_encoded = pd.get_dummies(df, columns=list(categorical_defaults.keys()))
+    
+    # 4. Fill missing columns with 0 and ensure order
+    final_df = pd.DataFrame(index=df.index)
+    
+    # Add numeric columns
+    numeric_defaults = {
+        'age': 17, 'Medu': 2, 'Fedu': 2, 'traveltime': 1, 'studytime': 2, 'failures': 0, 
+        'famrel': 4, 'freetime': 3, 'goout': 3, 'Dalc': 1, 'Walc': 1, 'health': 3, 'absences': 0
+    }
+    
+    for col, default in numeric_defaults.items():
+        if col in df.columns:
+            final_df[col] = df[col]
+        else:
+            final_df[col] = default
+            
+    # Add/Map dummy columns
+    # We manually map the "dropped first" logic or check presence
+    for feat in expected_features:
+        if feat in numeric_defaults:
+            continue
+        if feat in df_encoded.columns:
+            final_df[feat] = df_encoded[feat]
+        else:
+            final_df[feat] = 0
+            
+    # Ensure exact order
+    return final_df[expected_features]
 
 def determine_risk_level(score):
     """Determine risk level based on predicted score"""
@@ -187,9 +234,9 @@ def health():
 if __name__ == '__main__':
     print("🚀 Starting LearnScope.ai API...")
     load_model()
-    print("📡 Running on http://localhost:5000")
+    print("📡 Running on http://localhost:5001")
     print("📝 API endpoints:")
     print("   GET  /          - API info")
     print("   POST /predict   - Make predictions")
     print("   GET  /health    - Health check")
-    app.run(debug=True, host='0.0.0.0', port=5000)
+    app.run(debug=True, host='0.0.0.0', port=5001)
