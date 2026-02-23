@@ -5,7 +5,7 @@ export async function POST(request: Request) {
     const studentData = await request.json();
 
     // Try Python backend first
-    const pythonBackendUrl = process.env.PYTHON_BACKEND_URL || 'http://localhost:5000/predict';
+    const pythonBackendUrl = process.env.PYTHON_BACKEND_URL || 'http://localhost:5001/predict';
     try {
       const response = await fetch(pythonBackendUrl, {
         method: 'POST',
@@ -23,7 +23,7 @@ export async function POST(request: Request) {
         predictedGrade: prediction.predicted_grade ?? calculateMockGrade(studentData),
         riskLevel: risk,
         confidence: prediction.confidence ?? 0.85,
-        recommendations: generateRichRecommendations(studentData, risk),
+        recommendations: prediction.recommendations ?? generateRichRecommendations(studentData, risk),
         fromModel: true,
       });
     } catch {
