@@ -176,21 +176,33 @@ export default function StudentForm() {
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  Mother&apos;s Education (0-4)
+                  Mother's Education
                 </label>
-                <input type="number" name="Medu" value={formData.Medu} onChange={handleChange} min="0" max="4" className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white" />
+                <select name="Medu" value={formData.Medu} onChange={handleChange} className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                  <option value="0">None</option>
+                  <option value="1">Primary education (4th grade)</option>
+                  <option value="2">5th to 9th grade</option>
+                  <option value="3">Secondary education</option>
+                  <option value="4">Higher education</option>
+                </select>
               </div>
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  Father&apos;s Education (0-4)
+                  Father's Education
                 </label>
-                <input type="number" name="Fedu" value={formData.Fedu} onChange={handleChange} min="0" max="4" className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white" />
+                <select name="Fedu" value={formData.Fedu} onChange={handleChange} className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                  <option value="0">None</option>
+                  <option value="1">Primary education (4th grade)</option>
+                  <option value="2">5th to 9th grade</option>
+                  <option value="3">Secondary education</option>
+                  <option value="4">Higher education</option>
+                </select>
               </div>
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  Mother&apos;s Job
+                  Mother's Job
                 </label>
                 <select name="Mjob" value={formData.Mjob} onChange={handleChange} className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
                   <option value="teacher">Teacher</option>
@@ -203,7 +215,7 @@ export default function StudentForm() {
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  Father&apos;s Job
+                  Father's Job
                 </label>
                 <select name="Fjob" value={formData.Fjob} onChange={handleChange} className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
                   <option value="teacher">Teacher</option>

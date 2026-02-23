@@ -44,62 +44,61 @@ export default function Recommendations() {
   const [riskLevel, setRiskLevel] = useState<string>("");
   const [predictedScore, setPredictedScore] = useState<number>(0);
   const [recommendations, setRecommendations] = useState<string[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [modelUsed, setModelUsed] = useState(false);
 
   useEffect(() => {
-    const data = sessionStorage.getItem("studentData");
-    if (!data) {
-      router.push("/form");
-      return;
-    }
-
-    const parsed = JSON.parse(data);
-    setStudentData(parsed);
-    // Try to use cached prediction if the form previously stored it
-    const cached = sessionStorage.getItem("prediction");
-    if (cached) {
+    const fetchPredictions = async () => {
       try {
-        const pred = JSON.parse(cached);
-        if (pred) {
-          setPredictedScore(Number(pred.predictedGrade ?? pred.predicted_score ?? 0));
-          setRiskLevel(pred.riskLevel ?? pred.risk_level ?? calculateRiskLevel(parsed));
-          setRecommendations(pred.recommendations ?? pred.recs ?? generateRecommendations(parsed, pred.riskLevel ?? calculateRiskLevel(parsed)));
+        const data = sessionStorage.getItem("studentData");
+        if (!data) {
+          router.push("/form");
+          setIsLoading(false);
           return;
         }
-      } catch (e) {
-        // ignore parse errors and fall through to fetching
-      }
-    }
 
-    // Otherwise call the local API route which will proxy to the ML backend
-    (async () => {
-      try {
-        const res = await fetch('/api/predict', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(parsed),
+        const parsedData = JSON.parse(data);
+        setStudentData(parsedData);
+
+        // Call the API to get predictions from the ML model
+        const response = await fetch("/api/predict", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(parsedData),
         });
 
-        if (res.ok) {
-          const json = await res.json();
-          setPredictedScore(Number(json.predictedGrade ?? json.predicted_grade ?? json.predicted_score ?? 0));
-          setRiskLevel(json.riskLevel ?? json.risk_level ?? calculateRiskLevel(parsed));
-          setRecommendations(json.recommendations ?? json.recs ?? generateRecommendations(parsed, json.riskLevel ?? calculateRiskLevel(parsed)));
-          // cache prediction for quick reloads
-          try { sessionStorage.setItem('prediction', JSON.stringify(json)); } catch (e) {}
-          return;
+        if (response.ok) {
+          const result = await response.json();
+          setRiskLevel(result.riskLevel);
+          setPredictedScore(result.predictedGrade);
+          setRecommendations(result.recommendations);
+          setModelUsed(result.fromModel ?? false);
+        } else {
+          throw new Error("Failed to fetch predictions");
         }
-      } catch (err) {
-        console.error('Prediction request failed', err);
+      } catch (error) {
+        console.error("Error fetching predictions:", error);
+        // Fallback to local calculations
+        const data = sessionStorage.getItem("studentData");
+        if (data) {
+          const parsedData = JSON.parse(data);
+          setStudentData(parsedData);
+          const risk = calculateRiskLevel(parsedData);
+          setRiskLevel(risk);
+          const score = generatePredictedScore(parsedData, risk);
+          setPredictedScore(score);
+          const recs = generateRecommendations(parsedData, risk);
+          setRecommendations(recs);
+          setModelUsed(false);
+        }
+      } finally {
+        setIsLoading(false);
       }
+    };
 
-      // Fallback to local calculation if API fails
-      const risk = calculateRiskLevel(parsed);
-      setRiskLevel(risk);
-      const score = generatePredictedScore(parsed, risk);
-      setPredictedScore(score);
-      const recs = generateRecommendations(parsed, risk);
-      setRecommendations(recs);
-    })();
+    fetchPredictions();
   }, [router]);
 
   const calculateRiskLevel = (data: StudentData): string => {
@@ -239,7 +238,7 @@ export default function Recommendations() {
     } else if (text.includes("family") || text.includes("support")) {
       return (
         <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l-3 9a5.002 5.002 0 006.001 0M6 7l3 9M6 7l6-2m6 2l3-1m-3 1l-3 9a5.002 5.002 0 006.001 0M18 7l3 9m-3-9l-6-2m0-2v2m0 16V5m0 16H9m3 0h3" />
         </svg>
       );
     } else if (text.includes("Balance") || text.includes("social")) {
@@ -310,12 +309,12 @@ export default function Recommendations() {
     return analysis;
   };
 
-  if (!studentData) {
+  if (!studentData || isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Loading...</p>
+          <p className="mt-4 text-gray-600">Analyzing your data and generating recommendations...</p>
         </div>
       </div>
     );
